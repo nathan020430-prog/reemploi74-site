@@ -1,7 +1,7 @@
 # Réemploi 74 — site
 
 Site statique de Réemploi 74 (don ou rachat de matériel informatique en Savoie et Haute-Savoie).
-En ligne : **https://nathan020430-prog.github.io/reemploi74-site/** (GitHub Pages, HTTPS).
+En ligne : **https://reemploi74.fr** (GitHub Pages, HTTPS ; https://nathan020430-prog.github.io/reemploi74-site/ redirige).
 
 ## Organisation
 
