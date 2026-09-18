@@ -1,56 +1,68 @@
-# Réemploi 74 — mise en ligne du site
+# Réemploi 74 — site
 
-Ce dossier contient le site complet, statique : aucun serveur d'application n'est nécessaire.
-Il se dépose tel quel sur n'importe quel hébergement web.
+Site statique de Réemploi 74 (don ou rachat de matériel informatique en Savoie et Haute-Savoie).
+En ligne : **https://nathan020430-prog.github.io/reemploi74-site/** (GitHub Pages, HTTPS).
+
+## Organisation
 
 ```
-index.html      la page (toutes les rubriques, navigation par ancres #/donner, #/vendre, …)
-styles.css      la feuille de style
-app.js          navigation, formulaires, suivi
-config.js       ← le seul fichier à modifier pour passer en production
-img/            les 8 photos (licences Unsplash / Pexels, créditées dans le site)
-favicon.svg, robots.txt, sitemap.xml
-_headers        en-têtes de sécurité pour Netlify / Cloudflare Pages
-.htaccess       équivalent pour un hébergement Apache (OVH, o2switch…)
+src/index.html   la source : toutes les rubriques dans une seule page (mode aperçu, ancres #/rubrique)
+src/app.js       navigation, formulaires, suivi, typographie
+src/styles.css   feuille de style
+src/config.js    configuration (formulaires, email) — copié tel quel à la racine
+build.js         génère une page HTML par rubrique à la racine, avec titre, description,
+                 URL canonique, Open Graph, données structurées (LocalBusiness, FAQPage), sitemap.xml
+img/             les photos (licences Unsplash / Pexels, créditées sur credits.html)
+*.html           les pages générées — ne pas les modifier à la main
 ```
 
-## En 5 étapes
+**Pour modifier le site** : éditer `src/index.html` (ou `src/app.js`, `src/styles.css`), puis
 
-### 1. Réserver le nom de domaine (10 minutes, ~10 €/an)
-`reemploi74.fr` était libre le 15/09/2026 (vérifié sur le registre AFNIC), ainsi que `reemploi74.com` et `reemploi-savoie.fr`.
-Registrar conseillé : OVHcloud, Gandi ou Infomaniak. Activer le renouvellement automatique et le verrouillage de transfert.
+```
+node build.js
+```
 
-### 2. Choisir l'hébergement et déposer le dossier
+et pousser. GitHub Pages publie la branche `main` en une à deux minutes.
 
-| Option | Coût | Comment |
-|---|---|---|
-| **Cloudflare Pages** (recommandé) | 0 € | Créer un compte → Workers & Pages → Create → Upload assets → glisser ce dossier. Puis Custom domains → ajouter `reemploi74.fr` (Cloudflare gère le DNS et le HTTPS). |
-| **Netlify** | 0 € (usage non commercial) / 19 $/mois | Sites → Add new site → Deploy manually → glisser le dossier. Domain settings → ajouter le domaine. |
-| **OVH / o2switch** (hébergement mutualisé français) | 3 à 7 €/mois | Envoyer le contenu du dossier dans `www/` par FTP ou le gestionnaire de fichiers. Le `.htaccess` est fourni. |
-| **L'application Emergent existante** | plan Standard | Remplacer les pages de l'app par ce site et brancher ses formulaires sur l'API existante (voir étape 3). |
+**Adresse du site** : `build.js` écrit les URL canoniques et le sitemap avec `SITE_URL`
+(par défaut l'adresse GitHub Pages). Quand `reemploi74.fr` sera actif :
 
-Le HTTPS est fourni automatiquement par Cloudflare Pages, Netlify et les hébergeurs français (Let's Encrypt).
+```
+SITE_URL=https://reemploi74.fr node build.js
+```
 
-### 3. Brancher les formulaires (sinon le site reste en mode démonstration)
-Ouvrir `config.js` et renseigner `formEndpoint` :
+## Mise en production (les trois choses qui manquent)
 
-- **Formspree** (le plus simple) : créer un formulaire sur formspree.io, copier son URL `https://formspree.io/f/xxxx`. Gratuit jusqu'à 50 envois/mois, puis ~10 $/mois. Les photos sont transmises en pièces jointes sur les plans payants.
-- **Web3Forms** : gratuit 250 envois/mois, `formEndpoint: 'https://api.web3forms.com/submit'` et `formKey: 'votre access key'`.
-- **Votre propre API** (Emergent, ou un script) : l'URL reçoit un `POST multipart/form-data` avec les champs listés en tête de `config.js`.
+1. **Formulaires** — `src/config.js` : renseigner `formEndpoint` (Formspree `https://formspree.io/f/xxxx`,
+   ou Web3Forms + `formKey`). Tant qu'il est vide, le site est en mode démonstration : les demandes
+   restent dans le navigateur du visiteur. Dès qu'il est renseigné, les notes « démonstration »
+   disparaissent et les demandes (avec photos) sont envoyées.
+2. **Domaine** — réserver `reemploi74.fr` (libre au 15/09/2026), puis *Settings → Pages → Custom domain*
+   dans ce dépôt, et chez le registrar : 4 enregistrements `A` vers `185.199.108.153`, `185.199.109.153`,
+   `185.199.110.153`, `185.199.111.153` et un `CNAME www → nathan020430-prog.github.io`.
+   Cocher *Enforce HTTPS* une fois le certificat émis, puis relancer `SITE_URL=https://reemploi74.fr node build.js`.
+3. **Textes légaux** — dans `src/index.html`, remplacer les champs surlignés `[Raison sociale]`, `[SIREN]`,
+   `[Adresse du siège]`, `[Hébergeur]`, `[Téléphone]`, `[Horaires]`, `[Adresse de l'atelier]`, `[Assureur]`,
+   `[Médiateur de la consommation]`… puis retirer les encadrés « À compléter » et la classe `todo`.
+   Relecture par un juriste des pages Confidentialité et Conditions.
 
-Dès que `formEndpoint` est renseigné : les notes « site de démonstration » disparaissent, le bouton de simulation du suivi aussi, les demandes partent vers l'endpoint, et le visiteur garde son code de suivi.
-Le suivi en ligne détaillé (statuts mis à jour par l'atelier) demande une petite API : en attendant, la page Suivi invite à écrire avec le code.
+## Référencement
 
-### 4. Créer l'adresse email
-`contact@reemploi74.fr` est affichée sur le site. Ouvrir la messagerie chez le registrar (Infomaniak Service Mail ~1,50 €/mois, OVH Zimbra Starter 0,30 €/mois/compte, ou Google Workspace 6,80 €/mois) et poser les enregistrements MX, SPF, DKIM et DMARC fournis par le prestataire.
-Pour que les demandes des formulaires arrivent, indiquer cette adresse dans Formspree / Web3Forms.
+Déjà en place : une URL par rubrique, titres et descriptions distincts, canoniques, Open Graph, données
+structurées LocalBusiness (toutes les pages) et FAQPage (faq.html), `sitemap.xml`, `robots.txt`,
+clé IndexNow (`<clé>.txt`) pour Bing / Yandex / Seznam.
 
-### 5. Compléter les textes légaux avant l'ouverture
-Dans `index.html`, tous les champs `[Raison sociale]`, `[SIRET]`, `[Adresse du siège]`, `[Hébergeur]`, `[Téléphone]`, `[Horaires]`, `[Adresse de l'atelier]`, `[Assureur]`, `[Médiateur de la consommation]` … sont surlignés (classe `todo`). Les remplacer par les informations réelles, puis retirer les encadrés « À compléter » et la classe `todo`. Faire relire les pages Confidentialité et Conditions par un juriste ; désigner un médiateur de la consommation si du matériel est revendu à des particuliers.
+À faire avec un compte Google (impossible sans vous) :
 
-## Après la mise en ligne
-- Google Search Console : déclarer le site et envoyer `sitemap.xml`.
-- Fiche Google Business Profile « Réemploi 74 », zone Savoie / Haute-Savoie, photos, horaires.
-- Test complet depuis un téléphone : un don, une vente, un lot, jusqu'à la réception de l'email.
-- Remplacer les photos de banque par des photos de l'atelier dès que possible (mettre à jour la page Crédits).
-- Statistiques de fréquentation : Cloudflare Web Analytics ou Plausible (sans bandeau cookies si configuré selon la CNIL).
+- **Google Search Console** : https://search.google.com/search-console → *Ajouter une propriété* →
+  *Préfixe d'URL* `https://nathan020430-prog.github.io/reemploi74-site/` → vérification par balise HTML
+  (donner la balise `google-site-verification` : elle sera ajoutée dans `build.js`) → *Sitemaps* → `sitemap.xml`.
+- **Google Business Profile** : https://business.google.com → « Réemploi 74 », catégorie *Service de
+  recyclage informatique* ou *Magasin d'informatique d'occasion*, zone desservie Savoie + Haute-Savoie,
+  site, horaires, photos. C'est le levier local n° 1 pour « reprise ordinateur Annecy / Chambéry ».
+- **Bing Webmaster Tools** (facultatif, import possible depuis Search Console).
+
+## Photos
+
+Unsplash License et Pexels License (usage commercial autorisé, sans obligation d'attribution) ; les
+photographes sont crédités sur `credits.html`. À remplacer par des photos de l'atelier dès que possible.

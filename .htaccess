@@ -1,5 +1,6 @@
 # Apache (OVH, o2switch…)
 AddDefaultCharset UTF-8
+DirectoryIndex index.html
 <IfModule mod_headers.c>
   Header set X-Content-Type-Options "nosniff"
   Header set X-Frame-Options "DENY"
