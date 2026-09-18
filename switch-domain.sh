@@ -20,7 +20,7 @@ for i in $(seq 1 40); do
   case "$st" in *"cert:approved"*) break;; esac
   sleep 30
 done
-gh api -X PUT "repos/$REPO/pages" -F https_enforced=true >/dev/null && echo "HTTPS forcé"
+gh api -X PUT "repos/$REPO/pages" -F https_enforced=true >/dev/null 2>&1 && echo "HTTPS forcé" || echo "HTTPS à forcer plus tard (certificat encore en cours)"
 
 echo "== 3. Régénération avec SITE_URL=https://$DOMAIN"
 git pull -q --rebase origin main || true   # GitHub a ajouté le fichier CNAME
