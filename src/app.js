@@ -370,7 +370,7 @@
         .catch(() => {
           clearTimeout(timer);
           const st = $('.form-status', form);
-          if (st) st.textContent = "L'envoi a échoué. Réessayez dans un instant, ou écrivez-nous à " + (CFG.email || 'contact@reemploi74.fr') + ' en joignant la description de votre matériel.';
+          if (st) st.textContent = "L'envoi a échoué. Réessayez dans un instant, ou écrivez-nous à " + (CFG.email || 'nathan@reemploi74.fr') + ' en joignant la description de votre matériel.';
         })
         .finally(() => { if (btn) { btn.disabled = false; btn.textContent = label; } });
     });
@@ -405,7 +405,7 @@
     const d = loadAll()[code];
     let html;
     if (!d) {
-      html = '<div class="callout warn"><p><strong>Aucun dossier ne correspond à ce code.</strong> Vérifiez le code reçu par email (format R74-XXXXXX).' + (PROD ? ' Si le code est exact, écrivez-nous à ' + (CFG.email || 'contact@reemploi74.fr') + ' en le citant : nous vous répondons sous 48 h ouvrées.' : ' Sur ce site de démonstration, seuls les dossiers créés depuis ce navigateur sont retrouvés.') + '</p></div>';
+      html = '<div class="callout warn"><p><strong>Aucun dossier ne correspond à ce code.</strong> Vérifiez le code reçu par email (format R74-XXXXXX).' + (PROD ? ' Si le code est exact, écrivez-nous à ' + (CFG.email || 'nathan@reemploi74.fr') + ' en le citant : nous vous répondons sous 48 h ouvrées.' : ' Sur ce site de démonstration, seuls les dossiers créés depuis ce navigateur sont retrouvés.') + '</p></div>';
     } else {
       const steps = STATUTS[d.type] || STATUTS.don;
       const fmt = new Date(d.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });

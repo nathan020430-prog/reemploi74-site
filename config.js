@@ -14,5 +14,5 @@
 window.R74_CONFIG = {
   formEndpoint: '',
   formKey: '',
-  email: 'contact@reemploi74.fr',
+  email: 'nathan@reemploi74.fr',
 };

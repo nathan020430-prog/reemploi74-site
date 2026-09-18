@@ -65,7 +65,7 @@ const esc = s => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, 
 const strip = s => s.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 
 /* ---------- données structurées ---------- */
-const LOCAL_BUSINESS = { '@context': 'https://schema.org', '@type': 'LocalBusiness', name: 'Réemploi 74', description: 'Collecte, effacement certifié et remise en service de matériel informatique d\'occasion en Savoie et Haute-Savoie.', url: SITE_URL + '/', email: 'contact@reemploi74.fr', image: SITE_URL + '/img/atelier.jpg', areaServed: [{ '@type': 'AdministrativeArea', name: 'Savoie' }, { '@type': 'AdministrativeArea', name: 'Haute-Savoie' }], priceRange: 'Enlèvement gratuit' };
+const LOCAL_BUSINESS = { '@context': 'https://schema.org', '@type': 'LocalBusiness', name: 'Réemploi 74', description: 'Collecte, effacement certifié et remise en service de matériel informatique d\'occasion en Savoie et Haute-Savoie.', url: SITE_URL + '/', email: 'nathan@reemploi74.fr', image: SITE_URL + '/img/atelier.jpg', areaServed: [{ '@type': 'AdministrativeArea', name: 'Savoie' }, { '@type': 'AdministrativeArea', name: 'Haute-Savoie' }], priceRange: 'Enlèvement gratuit' };
 function faqSchema(body) {
   const items = [];
   const rx = /<details><summary>([\s\S]*?)<\/summary><div class="a">([\s\S]*?)<\/div><\/details>/g;
