@@ -328,7 +328,8 @@
     return data;
   }
 
-  $$('form.demande').forEach(form => {
+  // Seuls les formulaires de demande (data-type) : le formulaire de suivi partage la classe pour la mise en page.
+  $$('form.demande[data-type]').forEach(form => {
     describe(form);
     if (form.dataset.type !== 'lot') addEquip(form, false);
     const add = $('.add-equip', form);
