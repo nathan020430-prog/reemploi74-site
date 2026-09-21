@@ -19,7 +19,7 @@
  * disque, dpa, consentement, description, _subject, et les photos (photo_i_j).
  */
 window.R74_CONFIG = {
-  appUrl: '',
+  appUrl: 'https://reemploi74-app-1074882567821.europe-west9.run.app',
   formEndpoint: '',
   formKey: '',
   email: 'nathan@reemploi74.fr',
