@@ -18,8 +18,14 @@ DNS, reste à faire) est dans le dépôt privé `nathan020430-prog/reemploi74-do
   fichier clé IndexNow. Les liens `#/rubrique` de la source deviennent `rubrique.html`.
 - `src/app.js` : routage (mono-page en aperçu, pages réelles quand `<body data-page>` est présent), formulaires
   (validation, mode de remise enlèvement/dépôt, photos), confirmation avec code de suivi `R74-XXXXXX`, page de
-  suivi, typographie française automatique, mode production si `R74_CONFIG.formEndpoint` est renseigné.
-- `src/config.js` : `formEndpoint` (Formspree/Web3Forms/API), `formKey`, `email`. Vide = mode démonstration.
+  suivi, typographie française automatique. Mode production si `R74_CONFIG.appUrl` (ou `formEndpoint`) est
+  renseigné : envoi vers `appUrl/api/demandes` (code de suivi renvoyé par l'application), suivi par
+  `appUrl/api/suivi/<code>` (rendu de la vue publique : frise, offre, équipements, certificats), lien vers
+  `appUrl/suivi/<code>` pour répondre à une offre. Messages d'erreur de l'API (400 `erreurs`, 429, 413) affichés.
+- `src/config.js` : `appUrl` (application reemploi74-app), ou `formEndpoint` (Formspree/Web3Forms) + `formKey`, `email`.
+  Tout vide = mode démonstration.
+- `serve-local.mjs` : sert le site généré en local avec `appUrl` remplacé (`--app-url http://localhost:3074`)
+  pour tester avec l'application sans modifier le dépôt.
 - `switch-domain.sh` : bascule vers le domaine personnalisé (GitHub Pages, HTTPS, régénération, IndexNow).
 
 ## Règles de contenu (audit juridique — à respecter dans tout texte)

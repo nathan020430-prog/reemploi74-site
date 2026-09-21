@@ -289,6 +289,18 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 .timeline li.current::before { background: var(--copper); box-shadow: 0 0 0 2px var(--copper); }
 .timeline li .t { font-family: var(--display); font-weight: 600; }
 .timeline li .d { font-size: 14px; color: var(--muted); }
+.timeline li.terminal::before { background: var(--danger); box-shadow: 0 0 0 2px var(--danger); }
+.timeline li.terminal .t { color: var(--danger); }
+/* Suivi en production (vue renvoyée par l'application) */
+#suivi-result .card + .card { margin-top: 18px; }
+#suivi-result .card .timeline { margin-bottom: 0; }
+.offre-suivi .montant { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 8px 0 10px; }
+.offre-suivi .montant strong { font-family: var(--display); font-size: 30px; font-weight: 800; color: var(--moss); letter-spacing: -0.02em; line-height: 1.1; }
+.offre-suivi .callout { margin: 14px 0; }
+.offre-suivi .btn-row { margin-top: 14px; }
+.table-wrap { overflow-x: auto; margin-top: 8px; }
+.table-wrap table { font-size: 15px; }
+.table-wrap th, .table-wrap td { padding: 10px 12px; }
 .demo-note { font-size: 14px; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; background: var(--surface); max-width: 62ch; }
 
 /* ---------- Offers (sauvegarde) ---------- */

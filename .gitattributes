@@ -1,0 +1,12 @@
+# Fins de ligne LF partout (le projet est repris sur macOS, Linux et Windows).
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.svg text
+*.ttf binary
+*.otf binary
+*.woff2 binary
+*.pdf binary
+*.ico binary
+*.zip binary

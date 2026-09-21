@@ -31,20 +31,32 @@ et pousser. GitHub Pages publie la branche `main` en une à deux minutes.
 SITE_URL=https://reemploi74.fr node build.js
 ```
 
-## Mise en production (les trois choses qui manquent)
+## Mise en production
 
-1. **Formulaires** — `src/config.js` : renseigner `formEndpoint` (Formspree `https://formspree.io/f/xxxx`,
-   ou Web3Forms + `formKey`). Tant qu'il est vide, le site est en mode démonstration : les demandes
-   restent dans le navigateur du visiteur. Dès qu'il est renseigné, les notes « démonstration »
-   disparaissent et les demandes (avec photos) sont envoyées.
-2. **Domaine** — réserver `reemploi74.fr` (libre au 15/09/2026), puis *Settings → Pages → Custom domain*
-   dans ce dépôt, et chez le registrar : 4 enregistrements `A` vers `185.199.108.153`, `185.199.109.153`,
-   `185.199.110.153`, `185.199.111.153` et un `CNAME www → nathan020430-prog.github.io`.
-   Cocher *Enforce HTTPS* une fois le certificat émis, puis relancer `SITE_URL=https://reemploi74.fr node build.js`.
-3. **Textes légaux** — dans `src/index.html`, remplacer les champs surlignés `[Raison sociale]`, `[SIREN]`,
-   `[Adresse du siège]`, `[Hébergeur]`, `[Téléphone]`, `[Horaires]`, `[Adresse de l'atelier]`, `[Assureur]`,
-   `[Médiateur de la consommation]`… puis retirer les encadrés « À compléter » et la classe `todo`.
-   Relecture par un juriste des pages Confidentialité et Conditions.
+1. **Formulaires et suivi** — `src/config.js` : renseigner `appUrl` avec l'adresse de l'application
+   Réemploi 74 (dépôt `reemploi74-app`, une fois hébergée), sans barre finale. Les demandes partent alors
+   vers `appUrl/api/demandes` (l'application génère le code de suivi, repris sur la page de confirmation
+   et dans l'email), la page de suivi interroge `appUrl/api/suivi/<code>`, et répondre à une offre ou
+   télécharger un certificat se fait sur `appUrl/suivi/<code>`. Côté application, mettre
+   `https://reemploi74.fr` dans `ORIGINES_AUTORISEES`. Puis `SITE_URL=https://reemploi74.fr node build.js`
+   et push. Tant qu'`appUrl` est vide, le site est en mode démonstration : les demandes restent dans le
+   navigateur du visiteur. (`formEndpoint` accepte à la place un service générique, Formspree ou
+   Web3Forms + `formKey`, sans suivi réel.)
+2. **Domaine** — fait le 18/09/2026 : `reemploi74.fr` pointe sur GitHub Pages, HTTPS forcé
+   (`switch-domain.sh`).
+3. **Textes légaux** — identité de l'éditeur en place ; restent surlignés (classe `todo`) le n° de
+   récépissé de la déclaration en préfecture, le service de réception des formulaires (= l'application et
+   son hébergeur), l'assureur, le médiateur de la consommation et l'encadré D211-2. Relecture par un
+   juriste des pages Confidentialité et Conditions.
+
+### Tester le site avec l'application en local
+
+```
+node serve-local.mjs --port 8074 --app-url http://localhost:3074
+```
+
+sert les pages générées avec `appUrl` remplacé à la volée (le dépôt reste en mode démonstration) ; côté
+application, `ORIGINES_AUTORISEES="http://localhost:8074"` dans son `.env` et `pnpm dev --port 3074`.
 
 ## Référencement
 
