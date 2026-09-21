@@ -8,10 +8,8 @@
 
   /* ---------- Configuration (config.js) ---------- */
   const CFG = window.R74_CONFIG || {};
-  const APP_URL = (CFG.appUrl || '').trim().replace(/\/+$/, '');                        // application Réemploi 74 (API, suivi, certificats)
-  const ENDPOINT = (CFG.formEndpoint || '').trim() || (APP_URL ? APP_URL + '/api/demandes' : ''); // réception des demandes
+  const ENDPOINT = (CFG.formEndpoint || '').trim();   // URL de réception des demandes (Formspree, Web3Forms, Brevo, votre API…)
   const PROD = !!ENDPOINT;                             // sans endpoint : mode démonstration (stockage dans le navigateur)
-  const SUIVI_API = APP_URL ? APP_URL + '/api/suivi/' : ''; // suivi réel ; sans application : suivi limité à ce navigateur
   if (PROD) document.documentElement.classList.add('prod');
 
   /* ---------- Statuts d'un dossier ---------- */
@@ -77,25 +75,18 @@
     });
   }
 
-  /* ---------- Routage ----------
-   * Deux modes : aperçu mono-page (toutes les rubriques dans une page, ancres #/rubrique)
-   * ou site publié (une page HTML par rubrique, <body data-page="rubrique">, liens rubrique.html). */
-  const MULTI = !!(document.body && document.body.dataset && document.body.dataset.page !== undefined);
-  const DEFAULT_ROUTE = MULTI ? (document.body.dataset.page || '') : '';
-  const pageFor = route => (route === '' ? 'index.html' : route + '.html');
-  const routeUrl = (route, query) => (MULTI ? pageFor(route) + (query ? '?' + query : '') : '#/' + route + (query ? '?' + query : ''));
-  const hrefRoute = href => { const h = href || ''; if (/^#\//.test(h)) return h.replace(/^#\//, '').split('?')[0]; const m = h.match(/([a-z0-9-]+)\.html/i); return m ? (m[1] === 'index' ? '' : m[1]) : null; };
+  /* ---------- Routage par ancre ---------- */
   const pages = $$('section.page');
-  const navLinks = $$('nav.main a[href]').filter(a => hrefRoute(a.getAttribute('href')) !== null);
+  const navLinks = $$('nav.main a[href^="#/"]');
   let lastRoute = null;
   function parseHash() {
-    const raw = location.hash;
-    if (!raw || !/^#\//.test(raw)) return { route: DEFAULT_ROUTE, params: new URLSearchParams(MULTI ? location.search : '') };
-    const [path, query] = raw.replace(/^#\//, '').split('?');
-    return { route: path || DEFAULT_ROUTE, params: new URLSearchParams(query || '') };
+    const h = location.hash.replace(/^#\/?/, '');
+    const [path, query] = h.split('?');
+    const params = new URLSearchParams(query || '');
+    return { route: path || '', params };
   }
   function render() {
-    // Une ancre interne (ex. #app du lien d'évitement, #lot) n'est pas une route : on ne change rien après le premier rendu
+    // Une ancre interne (ex. #app du lien d'évitement) n'est pas une route : on ne change rien après le premier rendu
     if (lastRoute !== null && location.hash && !/^#\//.test(location.hash)) return;
     const { route, params } = parseHash();
     let found = false;
@@ -104,21 +95,17 @@
       p.hidden = !on;
       if (on) found = true;
     });
-    if (!found) {
-      // Site publié : la rubrique est une autre page
-      if (MULTI && route !== DEFAULT_ROUTE) { location.replace(routeUrl(route === 'confirmation' ? '' : route, params.toString())); return; }
-      pages.forEach(p => { p.hidden = p.dataset.route !== DEFAULT_ROUTE; });
-    }
+    if (!found) { pages.forEach(p => { p.hidden = p.dataset.route !== ''; }); }
     const active = pages.find(p => !p.hidden);
-    const effective = active ? active.dataset.route : DEFAULT_ROUTE;
+    const effective = active ? active.dataset.route : '';
     document.title = (active && active.dataset.title ? active.dataset.title + ' — ' : '') + 'Réemploi 74';
     navLinks.forEach(a => {
-      const r = hrefRoute(a.getAttribute('href'));
+      const r = a.getAttribute('href').replace(/^#\/?/, '').split('?')[0];
       if (r === effective && effective !== '') a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
     const nav = $('nav.main'); if (nav) nav.classList.remove('open');
     const toggle = $('.nav-toggle'); if (toggle) toggle.setAttribute('aria-expanded', 'false');
-    if (lastRoute !== null) window.scrollTo({ top: 0, behavior: 'auto' }); // au chargement, laisser le navigateur gérer une éventuelle ancre (#lot)
+    window.scrollTo({ top: 0, behavior: 'auto' });
     if (lastRoute !== null && lastRoute !== effective) {
       const h1 = active && $('h1', active);
       if (h1) { h1.setAttribute('tabindex', '-1'); h1.focus({ preventScroll: true }); }
@@ -157,33 +144,15 @@
     const a = ev.target.closest('[data-scroll]');
     if (!a) return;
     const target = document.getElementById(a.dataset.scroll);
-    if (!target) return; // la cible est sur une autre page : navigation normale
+    if (!target) return;
     ev.preventDefault();
-    const wanted = hrefRoute(a.getAttribute('href'));
-    if (!MULTI && wanted !== null && parseHash().route !== wanted) { location.hash = a.getAttribute('href'); }
+    const wanted = (a.getAttribute('href') || '').replace(/^#\/?/, '');
+    if (parseHash().route !== wanted) { location.hash = a.getAttribute('href'); }
     setTimeout(() => { target.setAttribute('tabindex', '-1'); target.focus({ preventScroll: true }); target.scrollIntoView({ behavior: smooth(), block: 'start' }); }, 60);
   });
 
   /* ---------- Formulaires ---------- */
   const MAX_PHOTO = 10 * 1024 * 1024;
-  // Réduction des photos dans le navigateur avant l'envoi (grand côté 1600 px, JPEG 82 %) : une photo
-  // de téléphone passe de 5 Mo à 300 Ko, l'envoi est rapide et l'application n'a pas à stocker
-  // l'original. Les formats non décodables (HEIC…) et les petits fichiers partent tels quels.
-  const PHOTO_MAX_COTE = 1600, PHOTO_QUALITE = 0.82, PHOTO_SEUIL = 600 * 1024;
-  function reduirePhoto(file) {
-    if (!/^image\/(jpeg|png|webp)$/i.test(file.type) || file.size <= PHOTO_SEUIL || !window.createImageBitmap || !window.File) return Promise.resolve(file);
-    return createImageBitmap(file, { imageOrientation: 'from-image' }).then(bmp => {
-      const ratio = Math.min(1, PHOTO_MAX_COTE / Math.max(bmp.width, bmp.height));
-      const w = Math.max(1, Math.round(bmp.width * ratio)), h = Math.max(1, Math.round(bmp.height * ratio));
-      const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(bmp, 0, 0, w, h);
-      if (bmp.close) bmp.close();
-      return new Promise(res => canvas.toBlob(b => res(b), 'image/jpeg', PHOTO_QUALITE));
-    }).then(blob => {
-      if (!blob || blob.size >= file.size) return file;
-      return new File([blob], file.name.replace(/\.[a-z0-9]+$/i, '') + '.jpg', { type: 'image/jpeg', lastModified: file.lastModified });
-    }).catch(() => file);
-  }
   let uid = 0;
 
   // Rattache aides et messages d'erreur à leur champ (aria-describedby)
@@ -346,8 +315,7 @@
     return data;
   }
 
-  // Seuls les formulaires de demande (data-type) : le formulaire de suivi partage la classe pour la mise en page.
-  $$('form.demande[data-type]').forEach(form => {
+  $$('form.demande').forEach(form => {
     describe(form);
     if (form.dataset.type !== 'lot') addEquip(form, false);
     const add = $('.add-equip', form);
@@ -379,41 +347,19 @@
       Object.keys(dossier.contact).forEach(k => fd.append(k, dossier.contact[k] == null ? '' : String(dossier.contact[k])));
       fd.append('equipements', JSON.stringify(dossier.equipements));
       fd.append('disque', dossier.disque ? 'oui' : 'non'); fd.append('dpa', dossier.dpa ? 'oui' : 'non');
-      fd.append('consentement', 'oui'); // la case est obligatoire (validate) : l'envoi vaut consentement explicite
       if (dossier.description) fd.append('description', dossier.description);
-      if (dossier.type === 'lot') { fd.append('etat_global', dossier.etat_global || ''); fd.append('souhait', dossier.souhait || ''); }
+      if (dossier.souhait) fd.append('souhait', dossier.souhait);
       fd.append('_subject', 'Réemploi 74 — ' + (TYPE_LABEL[dossier.type] || dossier.type) + ' ' + dossier.code);
       if (CFG.formKey) fd.append('access_key', CFG.formKey);
-      const photos = [];
-      $$('input[type="file"]', form).forEach((inp, i) => { Array.from(inp.files || []).slice(0, 5).forEach((file, j) => { if (file.size <= MAX_PHOTO) photos.push({ champ: 'photo_' + i + '_' + j, file }); }); });
+      $$('input[type="file"]', form).forEach((inp, i) => { Array.from(inp.files || []).slice(0, 5).forEach((file, j) => { if (file.size <= MAX_PHOTO) fd.append('photo_' + i + '_' + j, file, file.name); }); });
       const ctrl = window.AbortController ? new AbortController() : null;
-      let timer = null;
-      const st = $('.form-status', form);
-      if (st) st.textContent = '';
-      Promise.all(photos.map(p => reduirePhoto(p.file).then(file => ({ champ: p.champ, file }))))
-        .then(pieces => {
-          pieces.forEach(p => fd.append(p.champ, p.file, p.file.name));
-          timer = setTimeout(() => { if (ctrl) ctrl.abort(); }, 60000);
-          return fetch(ENDPOINT, { method: 'POST', body: fd, headers: { Accept: 'application/json' }, signal: ctrl ? ctrl.signal : undefined });
-        })
-        .then(r => r.json().catch(() => ({})).then(body => ({ ok: r.ok, status: r.status, body: body || {} })))
-        .then(rep => {
+      const timer = setTimeout(() => { if (ctrl) ctrl.abort(); }, 20000);
+      fetch(ENDPOINT, { method: 'POST', body: fd, headers: { Accept: 'application/json' }, signal: ctrl ? ctrl.signal : undefined })
+        .then(r => { clearTimeout(timer); if (!r.ok) throw new Error('HTTP ' + r.status); finish(); })
+        .catch(() => {
           clearTimeout(timer);
-          if (!rep.ok) throw Object.assign(new Error('HTTP ' + rep.status), { status: rep.status, body: rep.body });
-          // L'application génère le code de suivi (celui du navigateur n'est qu'un brouillon) : c'est
-          // ce code, repris dans l'email de confirmation, qu'il faut afficher.
-          if (typeof rep.body.code === 'string' && /^R74-[A-Z0-9]{6}$/.test(rep.body.code)) dossier.code = rep.body.code;
-          finish();
-        })
-        .catch(err => {
-          clearTimeout(timer);
-          if (!st) return;
-          const body = (err && err.body) || {};
-          const erreurs = body.erreurs && typeof body.erreurs === 'object' ? Object.keys(body.erreurs).map(k => body.erreurs[k]).filter(m => typeof m === 'string' && m) : [];
-          if (erreurs.length) st.textContent = 'La demande n\'a pas pu être enregistrée : ' + erreurs.join(' ') + ' Corrigez puis renvoyez le formulaire.';
-          else if (err && err.status === 429) st.textContent = body.message || 'Trop de demandes envoyées depuis votre connexion. Patientez quelques minutes avant de réessayer.';
-          else if (err && err.status === 413) st.textContent = 'Les photos jointes sont trop volumineuses pour un seul envoi. Retirez-en quelques-unes, ou envoyez-les ensuite par email en citant votre code.';
-          else st.textContent = "L'envoi a échoué. Réessayez dans un instant, ou écrivez-nous à " + (CFG.email || 'nathan@reemploi74.fr') + ' en joignant la description de votre matériel.';
+          const st = $('.form-status', form);
+          if (st) st.textContent = "L'envoi a échoué. Réessayez dans un instant, ou écrivez-nous à " + (CFG.email || 'contact@reemploi74.fr') + ' en joignant la description de votre matériel.';
         })
         .finally(() => { if (btn) { btn.disabled = false; btn.textContent = label; } });
     });
@@ -431,7 +377,7 @@
     $('#conf-code').textContent = d.code;
     $('#conf-type').textContent = TYPE_LABEL[d.type] || d.type;
     $('#conf-count').textContent = d.count + (d.count > 1 ? ' équipements' : ' équipement');
-    $('#conf-suivi-link').setAttribute('href', routeUrl('suivi', 'code=' + encodeURIComponent(d.code)));
+    $('#conf-suivi-link').setAttribute('href', '#/suivi?code=' + encodeURIComponent(d.code));
     const next = $('#conf-next');
     if (next) {
       if (d.type === 'vente') next.textContent = 'Vous recevrez une offre chiffrée sous 48 h ouvrées, valable 15 jours. Rien n\'est ' + (d.remise === 'depot' ? 'engagé' : 'enlevé') + ' avant votre accord.' + (d.remise === 'depot' ? ' Vous avez choisi le dépôt à l\'atelier : nous vous proposerons un rendez-vous avec l\'offre.' : '');
@@ -441,94 +387,14 @@
     try { typo(box); } catch (e) {}
   }
 
-  /* ---------- Suivi (production : vue publique renvoyée par l'application) ---------- */
-  const ETAPE_CLASSE = { faite: 'done', en_cours: 'current', terminale: 'terminal', a_venir: '' };
-  function pluriel(n, mot) { return n + ' ' + mot + (n > 1 ? 's' : ''); }
-  function focusSuivi(out, opts) {
-    if (opts && opts.focus === false) return;
-    const target = $('h3', out) || $('.callout', out);
-    if (target) { target.setAttribute('tabindex', '-1'); target.focus({ preventScroll: true }); }
-  }
-  function lienApp(chemin) { return APP_URL + chemin; }
-  function renderOffreApi(v) {
-    const o = v.offre;
-    if (!o) return '';
-    const titre = v.estLot ? 'Devis' : (o.revisee ? 'Offre révisée après diagnostic' : 'Offre de rachat');
-    const statut = (o.expiree && o.statut === 'ENVOYEE') ? 'Délai de réponse dépassé' : (o.reputeeRefusee ? 'Réputée refusée' : o.statutLibelle);
-    let h = '<div class="card offre-suivi"><p class="eyebrow copper">' + escapeHtml(titre) + '</p><p class="montant"><strong>' + escapeHtml(o.montant) + '</strong> <span class="chip">' + escapeHtml(statut) + '</span></p>';
-    if (o.revisee && o.motifRevision) h += '<p class="small"><span class="muted">Ce que le diagnostic a révélé : </span>' + escapeHtml(o.motifRevision) + '</p>';
-    if (o.statut === 'ENVOYEE' && o.valideJusquAuLibelle) h += '<p class="small muted">' + (o.expiree ? 'Délai de réponse dépassé le ' : 'Vous avez jusqu\'au ') + escapeHtml(o.valideJusquAuLibelle) + (o.expiree ? '.' : ' pour répondre.') + '</p>';
-    const dateLongue = iso => { try { return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return ''; } };
-    if (o.statut === 'ACCEPTEE' && o.accepteeLe) h += '<p class="small muted">Acceptée le ' + escapeHtml(dateLongue(o.accepteeLe)) + '.</p>';
-    if (o.statut === 'PAYEE' && o.payeeLe) h += '<p class="small muted">Paiement enregistré le ' + escapeHtml(dateLongue(o.payeeLe)) + '.</p>';
-    if (o.statut === 'EXPIREE') h += '<div class="callout warn"><p>Cette offre a atteint sa date limite sans réponse : elle n\'est plus valable et rien n\'a été enlevé. Pour une nouvelle proposition, écrivez-nous en citant votre code de suivi.</p></div>';
-    if (o.restitutionJusquAuLibelle) h += '<div class="callout warn"><p><strong>Votre matériel vous attend à l\'atelier.</strong> ' + (o.reputeeRefusee ? 'L\'offre révisée est restée sans réponse dans le délai : elle est réputée refusée. ' : 'Vous avez refusé l\'offre révisée : c\'est noté. ') + 'Votre matériel, données effacées, reste votre propriété. Il est tenu à votre disposition à l\'atelier de Cluses jusqu\'au ' + escapeHtml(o.restitutionJusquAuLibelle) + ' : écrivez-nous ou appelez-nous pour convenir d\'un rendez-vous de restitution, sans frais.</p></div>';
-    if (o.peutAccepter || o.peutRefuser || o.peutConvertirEnDon) {
-      h += '<p class="small muted">' + (o.revisee ? 'Vous pouvez accepter l\'offre révisée, la refuser (nous vous restituons alors le matériel, données effacées, sans frais) ou choisir le don.' : 'Vous restez libre de l\'accepter, de la refuser ou de choisir le don. Rien n\'est enlevé avant votre accord.') + '</p>';
-      h += '<div class="btn-row"><a class="btn primary" href="' + escapeHtml(lienApp('/suivi/' + encodeURIComponent(v.code))) + '">Répondre à l\'offre</a></div>';
-    }
-    return h + '</div>';
-  }
-  function renderEquipementsApi(v) {
-    const groupes = {};
-    const ordre = [];
-    (v.equipements || []).forEach(e => {
-      const k = [e.type, e.marque || '', e.modele || '', e.statut].join('|');
-      if (!groupes[k]) { groupes[k] = { type: e.typeLibelle, marque: e.marque, modele: e.modele, statut: e.statutLibelle, n: 0, certificats: [] }; ordre.push(k); }
-      groupes[k].n += 1;
-      (e.certificats || []).forEach(c => groupes[k].certificats.push(c));
-    });
-    if (!ordre.length) return '';
-    let h = '<div class="card"><p class="eyebrow">Équipements</p><div class="table-wrap"><table class="no-typo"><thead><tr><th class="n">Qté</th><th>Type</th><th>Marque et modèle</th><th>Statut</th><th>Certificat d\'effacement</th></tr></thead><tbody>';
-    ordre.forEach(k => {
-      const g = groupes[k];
-      const certs = g.certificats.length ? g.certificats.map(c => c.pdf ? '<a href="' + escapeHtml(lienApp(c.pdf)) + '" title="Télécharger le certificat (PDF)">' + escapeHtml(c.numero) + '</a>' : escapeHtml(c.numero)).join(', ') : '—';
-      h += '<tr><td class="n">' + g.n + '</td><td>' + escapeHtml(g.type) + '</td><td class="muted">' + escapeHtml([g.marque, g.modele].filter(Boolean).join(' ') || '—') + '</td><td>' + escapeHtml(g.statut) + '</td><td class="mono small">' + certs + '</td></tr>';
-    });
-    return h + '</tbody></table></div></div>';
-  }
-  function renderDossierApi(v) {
-    let h = '<div class="card"><p class="eyebrow">Dossier <span class="no-typo mono">' + escapeHtml(v.code) + '</span></p><h3>' + escapeHtml(v.voieLibelle) + ' · ' + pluriel(v.nombreEquipements || 0, 'équipement') + '</h3>';
-    h += '<p class="muted small">Déclaré le ' + escapeHtml(v.deposeLeLibelle || '') + (v.modeRemiseLibelle ? ' · ' + escapeHtml(v.modeRemiseLibelle) : '') + (v.convertiEnDonLe ? ' · demande de rachat convertie en don' : '') + '</p>';
-    h += '<ol class="timeline">';
-    (v.frise || []).forEach(s => {
-      const cls = ETAPE_CLASSE[s.etat] || '';
-      h += '<li class="' + cls + '"' + (s.etat === 'en_cours' ? ' aria-current="step"' : '') + '><div class="t">' + escapeHtml(s.libelle) + '</div>' + (s.detail ? '<div class="d">' + escapeHtml(s.detail) + '</div>' : (s.etat === 'faite' ? '<div class="d">Terminé</div>' : '')) + '</li>';
-    });
-    h += '</ol></div>';
-    return h + renderOffreApi(v) + renderEquipementsApi(v);
-  }
-  function showSuiviApi(code, opts) {
-    const out = $('#suivi-result');
-    out.innerHTML = '<p class="muted" role="status">Recherche du dossier…</p>';
-    const ctrl = window.AbortController ? new AbortController() : null;
-    const timer = setTimeout(() => { if (ctrl) ctrl.abort(); }, 15000);
-    const contact = ' Si le code est exact, écrivez-nous à ' + (CFG.email || 'nathan@reemploi74.fr') + ' en le citant : nous vous répondons sous 48 h ouvrées.';
-    fetch(SUIVI_API + encodeURIComponent(code), { headers: { Accept: 'application/json' }, signal: ctrl ? ctrl.signal : undefined })
-      .then(r => r.json().catch(() => ({})).then(body => ({ ok: r.ok, status: r.status, body: body || {} })))
-      .then(rep => {
-        clearTimeout(timer);
-        if (rep.ok && rep.body && rep.body.code) { out.innerHTML = renderDossierApi(rep.body); return; }
-        if (rep.status === 404) out.innerHTML = '<div class="callout warn"><p><strong>Aucun dossier ne correspond à ce code.</strong> Vérifiez le code reçu par email (format R74-XXXXXX).' + contact + '</p></div>';
-        else if (rep.status === 429) out.innerHTML = '<div class="callout warn"><p>' + escapeHtml(rep.body.message || 'Trop de tentatives. Patientez quelques minutes avant de réessayer.') + '</p></div>';
-        else throw new Error('HTTP ' + rep.status);
-      })
-      .catch(() => {
-        clearTimeout(timer);
-        out.innerHTML = '<div class="callout warn"><p><strong>Le suivi est momentanément indisponible.</strong> Réessayez dans un instant.' + contact + '</p></div>';
-      })
-      .finally(() => { try { typo(out); } catch (e) {} focusSuivi(out, opts); });
-  }
-
   /* ---------- Suivi ---------- */
   function showSuivi(code, opts) {
     const out = $('#suivi-result');
     if (!out) return;
-    if (SUIVI_API) { showSuiviApi(code, opts); return; }
     const d = loadAll()[code];
     let html;
     if (!d) {
-      html = '<div class="callout warn"><p><strong>Aucun dossier ne correspond à ce code.</strong> Vérifiez le code reçu par email (format R74-XXXXXX).' + (PROD ? ' Si le code est exact, écrivez-nous à ' + (CFG.email || 'nathan@reemploi74.fr') + ' en le citant : nous vous répondons sous 48 h ouvrées.' : ' Sur ce site de démonstration, seuls les dossiers créés depuis ce navigateur sont retrouvés.') + '</p></div>';
+      html = '<div class="callout warn"><p><strong>Aucun dossier ne correspond à ce code.</strong> Vérifiez le code reçu par email (format R74-XXXXXX).' + (PROD ? ' Si le code est exact, écrivez-nous à ' + (CFG.email || 'contact@reemploi74.fr') + ' en le citant : nous vous répondons sous 48 h ouvrées.' : ' Sur ce site de démonstration, seuls les dossiers créés depuis ce navigateur sont retrouvés.') + '</p></div>';
     } else {
       const steps = STATUTS[d.type] || STATUTS.don;
       const fmt = new Date(d.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -556,8 +422,8 @@
   if (sf) sf.addEventListener('submit', ev => {
     ev.preventDefault();
     const code = normCode($('#suivi-code').value);
-    const target = MULTI ? '?code=' + encodeURIComponent(code) : '#/suivi?code=' + encodeURIComponent(code);
-    try { history.replaceState(null, '', target); } catch (e) { if (!MULTI) location.hash = target; }
+    const target = '#/suivi?code=' + encodeURIComponent(code);
+    try { history.replaceState(null, '', target); } catch (e) { location.hash = target; }
     showSuivi(code, { focus: true });
   });
 
@@ -566,9 +432,4 @@
   try { typo(document.body); } catch (e) { /* purement cosmétique */ }
   const y = $('#year'); if (y) y.textContent = new Date().getFullYear();
   render();
-  // Site publié : une ancre de page (#lot) doit rester atteignable après le rendu
-  if (MULTI && location.hash && !/^#\//.test(location.hash)) {
-    const t = document.getElementById(location.hash.slice(1));
-    if (t) setTimeout(() => t.scrollIntoView({ block: 'start' }), 80);
-  }
 })();

@@ -166,6 +166,24 @@
 
   /* ---------- Formulaires ---------- */
   const MAX_PHOTO = 10 * 1024 * 1024;
+  // Réduction des photos dans le navigateur avant l'envoi (grand côté 1600 px, JPEG 82 %) : une photo
+  // de téléphone passe de 5 Mo à 300 Ko, l'envoi est rapide et l'application n'a pas à stocker
+  // l'original. Les formats non décodables (HEIC…) et les petits fichiers partent tels quels.
+  const PHOTO_MAX_COTE = 1600, PHOTO_QUALITE = 0.82, PHOTO_SEUIL = 600 * 1024;
+  function reduirePhoto(file) {
+    if (!/^image\/(jpeg|png|webp)$/i.test(file.type) || file.size <= PHOTO_SEUIL || !window.createImageBitmap || !window.File) return Promise.resolve(file);
+    return createImageBitmap(file, { imageOrientation: 'from-image' }).then(bmp => {
+      const ratio = Math.min(1, PHOTO_MAX_COTE / Math.max(bmp.width, bmp.height));
+      const w = Math.max(1, Math.round(bmp.width * ratio)), h = Math.max(1, Math.round(bmp.height * ratio));
+      const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(bmp, 0, 0, w, h);
+      if (bmp.close) bmp.close();
+      return new Promise(res => canvas.toBlob(b => res(b), 'image/jpeg', PHOTO_QUALITE));
+    }).then(blob => {
+      if (!blob || blob.size >= file.size) return file;
+      return new File([blob], file.name.replace(/\.[a-z0-9]+$/i, '') + '.jpg', { type: 'image/jpeg', lastModified: file.lastModified });
+    }).catch(() => file);
+  }
   let uid = 0;
 
   // Rattache aides et messages d'erreur à leur champ (aria-describedby)
@@ -366,12 +384,18 @@
       if (dossier.type === 'lot') { fd.append('etat_global', dossier.etat_global || ''); fd.append('souhait', dossier.souhait || ''); }
       fd.append('_subject', 'Réemploi 74 — ' + (TYPE_LABEL[dossier.type] || dossier.type) + ' ' + dossier.code);
       if (CFG.formKey) fd.append('access_key', CFG.formKey);
-      $$('input[type="file"]', form).forEach((inp, i) => { Array.from(inp.files || []).slice(0, 5).forEach((file, j) => { if (file.size <= MAX_PHOTO) fd.append('photo_' + i + '_' + j, file, file.name); }); });
+      const photos = [];
+      $$('input[type="file"]', form).forEach((inp, i) => { Array.from(inp.files || []).slice(0, 5).forEach((file, j) => { if (file.size <= MAX_PHOTO) photos.push({ champ: 'photo_' + i + '_' + j, file }); }); });
       const ctrl = window.AbortController ? new AbortController() : null;
-      const timer = setTimeout(() => { if (ctrl) ctrl.abort(); }, 60000); // les photos peuvent peser plusieurs dizaines de Mo
+      let timer = null;
       const st = $('.form-status', form);
       if (st) st.textContent = '';
-      fetch(ENDPOINT, { method: 'POST', body: fd, headers: { Accept: 'application/json' }, signal: ctrl ? ctrl.signal : undefined })
+      Promise.all(photos.map(p => reduirePhoto(p.file).then(file => ({ champ: p.champ, file }))))
+        .then(pieces => {
+          pieces.forEach(p => fd.append(p.champ, p.file, p.file.name));
+          timer = setTimeout(() => { if (ctrl) ctrl.abort(); }, 60000);
+          return fetch(ENDPOINT, { method: 'POST', body: fd, headers: { Accept: 'application/json' }, signal: ctrl ? ctrl.signal : undefined });
+        })
         .then(r => r.json().catch(() => ({})).then(body => ({ ok: r.ok, status: r.status, body: body || {} })))
         .then(rep => {
           clearTimeout(timer);

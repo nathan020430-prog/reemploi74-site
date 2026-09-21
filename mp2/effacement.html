@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comment nous effaçons vos données — Réemploi 74</title>
+<meta name="description" content="Comment Réemploi 74 efface vos données : inventaire par numéro de série, effacement conforme NIST 800-88 (Purge ou Clear), vérification, certificat par disque, destruction des supports défaillants.">
+<link rel="canonical" href="https://nathan020430-prog.github.io/reemploi74-site/effacement.html">
+<meta name="theme-color" content="#2F7D5B">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="Réemploi 74">
+<meta property="og:title" content="Comment nous effaçons vos données — Réemploi 74">
+<meta property="og:description" content="Comment Réemploi 74 efface vos données : inventaire par numéro de série, effacement conforme NIST 800-88 (Purge ou Clear), vérification, certificat par disque, destruction des supports défaillants.">
+<meta property="og:url" content="https://nathan020430-prog.github.io/reemploi74-site/effacement.html">
+<meta property="og:image" content="https://nathan020430-prog.github.io/reemploi74-site/img/atelier.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LocalBusiness","name":"Réemploi 74","description":"Collecte, effacement certifié et remise en service de matériel informatique d'occasion en Savoie et Haute-Savoie.","url":"https://nathan020430-prog.github.io/reemploi74-site/","email":"contact@reemploi74.fr","image":"https://nathan020430-prog.github.io/reemploi74-site/img/atelier.jpg","areaServed":[{"@type":"AdministrativeArea","name":"Savoie"},{"@type":"AdministrativeArea","name":"Haute-Savoie"}],"priceRange":"Enlèvement gratuit"}</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="styles.css">
+
+</head>
+<body data-page="effacement">
+<a class="skip" href="#app">Aller au contenu</a>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="index.html" aria-label="Réemploi 74, accueil">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="10" fill="#2F7D5B"/><path d="M27.5 13.5a10 10 0 1 0 2.4 9.6" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/><path d="M28.6 8.5v6.2h-6.2" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Réemploi 74<small>Savoie &amp; Haute-Savoie</small></span>
+    </a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu">Menu</button>
+    <nav class="main" id="menu" aria-label="Navigation principale">
+      <a href="donner.html">Donner</a>
+      <a href="vendre.html">Vendre</a>
+      <a href="entreprises.html">Entreprises</a>
+      <a href="sauvegarde.html">Serveur de sauvegarde</a>
+      <a href="faq.html">FAQ</a>
+      <a href="a-propos.html">À propos</a>
+      <a href="contact.html">Contact</a>
+      <a class="btn ghost small" href="suivi.html">Suivre mon dossier</a>
+    </nav>
+  </div>
+</header>
+
+<main id="app" tabindex="-1">
+<section class="page" data-route="effacement" data-title="Comment nous effaçons vos données">
+  <div class="wrap">
+    <div class="page-head">
+      <span class="eyebrow">Vos données</span>
+      <h1>Comment nous effaçons vos données</h1>
+      <p class="lede">Vos données sont la première chose que nous traitons, avant toute réparation et avant tout test. Voici, étape par étape, ce qui se passe entre l'enlèvement et le certificat.</p>
+    </div>
+    <div class="media" style="margin:20px 0 40px">
+      <div class="prose">
+        <h3>1. Réception et inventaire par numéro de série</h3>
+        <p>Chaque appareil est enregistré à l'atelier sous son numéro de série et rattaché à votre code de suivi. Chaque disque ou support de stockage est inventorié séparément, avec son propre numéro de série quand il en possède un ; à défaut, il est identifié par le numéro de série de l'appareil qui le contient. Cet inventaire est comparé au bordereau signé à l'enlèvement : rien n'entre, rien ne sort sans trace.</p>
+        <h3>2. Stockage verrouillé</h3>
+        <p>Entre la réception et l'effacement, le matériel est conservé dans une zone fermée à clé de l'atelier, accessible uniquement aux personnes chargées de l'effacement. Aucun appareil n'est confié à la réparation, testé ni exposé avant que son stockage ne soit effacé. La date de réception et la date d'effacement sont toutes deux notées dans notre registre.</p>
+      </div>
+      <img src="img/disque.jpg" alt="Disque dur interne ouvert posé sur une surface blanche, plateau et tête de lecture visibles" width="1600" height="1200" loading="lazy">
+    </div>
+    <div class="prose">
+      <h3>3. Effacement : une méthode selon le support</h3>
+      <p>Chaque disque est effacé selon la norme NIST 800-88 : Purge quand le matériel le permet, Clear sinon. Pour un SSD, nous utilisons la commande d'effacement interne du disque (Sanitize en NVMe, Sanitize ou Secure Erase en SATA) : c'est le contrôleur du disque qui efface, y compris les zones que l'ordinateur ne voit pas. Pour un disque dur mécanique, la commande Secure Erase du disque atteint le niveau Purge ; à défaut, une écriture complète en une passe atteint le niveau Clear. Sur un support chiffré depuis sa mise en service (chiffrement du système, disque auto-chiffrant, smartphone chiffré), la destruction de la clé de chiffrement, appelée effacement cryptographique, atteint le niveau Purge à condition que le chiffrement et la destruction de la clé soient vérifiables ; sinon, nous complétons par un effacement classique. Pour les portables à stockage soudé et les smartphones, nous passons par la réinitialisation d'usine du système, qui détruit la clé de chiffrement, et nous notons le niveau réellement atteint. Le niveau retenu, Clear ou Purge, est inscrit sur le certificat, disque par disque.</p>
+      <h3>4. Vérification</h3>
+      <p>Après l'effacement, l'outil relit le support : lecture complète ou lecture d'échantillons répartis sur tout le disque, selon la méthode et la taille. Le contenu lu est comparé à ce qui est attendu (secteurs vides ou motif connu). Le rapport de vérification reçoit une empreinte numérique, qui est reportée sur le certificat. Si la vérification échoue, le disque repasse en effacement ; s'il échoue une seconde fois, il part en destruction physique.</p>
+      <h3>5. Certificat par disque</h3>
+      <p>Vous recevez un certificat par disque, pas un certificat par lot. Il reprend le numéro de série du disque et de l'appareil qui le contenait, la méthode utilisée (Clear ou Purge, et la commande exacte), l'outil et sa version, la date, l'opérateur, le résultat de la vérification et son empreinte. Il est envoyé en PDF, rattaché à votre code de suivi, et conservé dans notre registre. Pour une entreprise, l'ensemble des certificats est regroupé avec le bordereau de traçabilité.</p>
+      <h3>6. Disques non effaçables : destruction physique et attestation</h3>
+      <p>Un disque qui ne répond plus (panne électronique, secteurs illisibles, contrôleur muet) ne peut pas être effacé par logiciel et ne peut pas être réemployé. Il est alors détruit physiquement à l'atelier, plateaux ou puces mémoire compris, puis remis à un éco-organisme agréé. Vous recevez une attestation de destruction avec le numéro de série, la date, la méthode et l'opérateur, à la place du certificat d'effacement. Si vous l'avez demandé dans le formulaire, ce disque vous est rendu tel quel.</p>
+      <div class="callout"><p><strong>Ce que nous ne promettons pas :</strong> une garantie absolue, que personne ne peut donner. <strong>Ce que nous promettons :</strong> une méthode reconnue, une vérification après effacement, une trace écrite par disque, et la possibilité de garder votre disque si vous le souhaitez.</p></div>
+    </div>
+    <h2 style="font-size:28px;margin-top:40px">Ce que contient le certificat</h2>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th scope="col">Champ</th><th scope="col">Contenu</th><th scope="col">À quoi il sert</th></tr></thead>
+      <tbody>
+        <tr><td>Numéro de série du disque</td><td>Numéro gravé par le fabricant, lu par l'outil</td><td>Rattacher le certificat à un support précis</td></tr>
+        <tr><td>Appareil hôte</td><td>Marque, modèle et numéro de série de l'ordinateur ou du téléphone</td><td>Faire le lien avec le bordereau de traçabilité</td></tr>
+        <tr><td>Type de support</td><td>HDD, SSD SATA, SSD NVMe, stockage soudé (eMMC, UFS), carte mémoire</td><td>Justifier la méthode choisie</td></tr>
+        <tr><td>Méthode</td><td>Niveau NIST 800-88 (Clear ou Purge) et commande utilisée (Sanitize, Secure Erase, effacement cryptographique, écriture une passe)</td><td>Savoir exactement ce qui a été fait</td></tr>
+        <tr><td>Outil et version</td><td>Nom du logiciel d'effacement et numéro de version</td><td>Retrouver le comportement exact de l'outil</td></tr>
+        <tr><td>Date et heure</td><td>Début et fin de l'effacement</td><td>Dater l'opération</td></tr>
+        <tr><td>Opérateur</td><td>Identifiant de la personne qui a lancé et vérifié l'effacement</td><td>Savoir qui a fait quoi, en cas de question</td></tr>
+        <tr><td>Résultat de vérification</td><td>Réussite ou échec, part du disque relue</td><td>Confirmer que la relecture a été faite</td></tr>
+        <tr><td>Empreinte de vérification</td><td>Empreinte numérique (somme de contrôle) du rapport de vérification</td><td>Détecter toute modification ultérieure du rapport</td></tr>
+        <tr><td>Code de suivi</td><td>Votre code de suivi Réemploi 74</td><td>Retrouver le certificat depuis votre suivi</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <div class="cols">
+      <div>
+        <a class="brand" href="index.html"><svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="10" fill="#6FCF9A"/><path d="M27.5 13.5a10 10 0 1 0 2.4 9.6" fill="none" stroke="#0F1A15" stroke-width="3.2" stroke-linecap="round"/><path d="M28.6 8.5v6.2h-6.2" fill="none" stroke="#0F1A15" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Réemploi 74<small>Savoie &amp; Haute-Savoie</small></span></a>
+        <p style="margin-top:14px;max-width:38ch;opacity:.88">Réemploi informatique en Savoie et Haute-Savoie. Collecte gratuite, effacement certifié, matériel remis en service localement. Pas de compte, pas de newsletter : un formulaire, un code de suivi.</p>
+        <p style="opacity:.88"><a href="mailto:contact@reemploi74.fr">contact@reemploi74.fr</a></p>
+      </div>
+      <div>
+        <h4>Le service</h4>
+        <ul><li><a href="donner.html">Faire un don</a></li><li><a href="vendre.html">Vendre mon matériel</a></li><li><a href="entreprises.html">Entreprises et collectivités</a></li><li><a href="sauvegarde.html">Serveur de sauvegarde</a></li><li><a href="suivi.html">Suivre mon dossier</a></li></ul>
+      </div>
+      <div>
+        <h4>Comprendre</h4>
+        <ul><li><a href="ce-que-nous-prenons.html">Ce que nous prenons</a></li><li><a href="effacement.html">Comment nous effaçons</a></li><li><a href="faq.html">Questions fréquentes</a></li><li><a href="a-propos.html">Notre mission</a></li><li><a href="contact.html">Contact</a></li></ul>
+      </div>
+      <div>
+        <h4>Légal</h4>
+        <ul><li><a href="mentions-legales.html">Mentions légales</a></li><li><a href="confidentialite.html">Confidentialité</a></li><li><a href="conditions.html">Conditions du service</a></li><li><a href="credits.html">Crédits photos</a></li></ul>
+      </div>
+    </div>
+    <div class="legal"><span>© <span id="year">2026</span> Réemploi 74</span><span>Matériel d'occasion encore fonctionnel. Équipements irréparables démontés pour pièces puis remis à un éco-organisme agréé.</span></div>
+  </div>
+</footer>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
