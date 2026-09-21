@@ -10,6 +10,9 @@ const out = __dirname;
 const html = fs.readFileSync(path.join(src, 'index.html'), 'utf8');
 
 /* ---------- découpage de la source ---------- */
+// Balise de vérification Google Search Console (fichier google-site-verification.txt à la racine, jeton public).
+const GOOGLE_SITE_VERIFICATION = fs.existsSync(path.join(__dirname, 'google-site-verification.txt'))
+  ? fs.readFileSync(path.join(__dirname, 'google-site-verification.txt'), 'utf8').trim() : '';
 const headEnd = html.indexOf('<a class="skip"');
 const headSrc = html.slice(0, headEnd);                       // <title>, meta description, polices, css
 const mainStart = html.indexOf('<main id="app"');
@@ -91,6 +94,7 @@ for (const r of routes) {
   const schemas = jsonld(LOCAL_BUSINESS) + (r === 'faq' ? jsonld(faqSchema(sec.body)) : '');
   const doc = '<!doctype html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n'
     + '<title>' + esc(title) + '</title>\n'
+    + (GOOGLE_SITE_VERIFICATION ? '<meta name="google-site-verification" content="' + esc(GOOGLE_SITE_VERIFICATION) + '">\n' : '')
     + '<meta name="description" content="' + esc(meta.desc) + '">\n'
     + '<link rel="canonical" href="' + url + '">\n'
     + '<meta name="theme-color" content="#2F7D5B">\n<link rel="icon" href="favicon.svg" type="image/svg+xml">\n'
