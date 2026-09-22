@@ -72,6 +72,11 @@ const strip = s => s.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 
 /* ---------- données structurées ---------- */
 const LOCAL_BUSINESS = { '@context': 'https://schema.org', '@type': 'LocalBusiness', name: 'Réemploi 74', description: 'Collecte, effacement certifié et remise en service de matériel informatique d\'occasion en Savoie et Haute-Savoie.', url: SITE_URL + '/', email: 'nathan@reemploi74.fr', telephone: '+33698354440', address: { '@type': 'PostalAddress', streetAddress: '49 avenue du Docteur Jacques Arnaud', postalCode: '74300', addressLocality: 'Cluses', addressCountry: 'FR' }, image: SITE_URL + '/img/atelier.jpg', areaServed: [{ '@type': 'AdministrativeArea', name: 'Savoie' }, { '@type': 'AdministrativeArea', name: 'Haute-Savoie' }], priceRange: 'Enlèvement gratuit' };
+// Guides : données structurées Article (date de première publication par guide).
+const GUIDES = { 'que-faire-de-vos-vieux-ordinateurs': '2026-09-22', 'donner-un-ordinateur-a-une-association': '2026-09-22', 'effacer-ses-donnees-avant-de-vendre-ou-donner': '2026-09-22' };
+function articleSchema(r, title, desc) {
+  return { '@context': 'https://schema.org', '@type': 'Article', headline: title, description: desc, url: pageUrl(r), mainEntityOfPage: pageUrl(r), datePublished: GUIDES[r], inLanguage: 'fr-FR', image: SITE_URL + '/img/atelier.jpg', author: { '@type': 'Organization', name: 'Réemploi 74', url: SITE_URL + '/' }, publisher: { '@type': 'Organization', name: 'Réemploi 74', url: SITE_URL + '/' } };
+}
 function faqSchema(body) {
   const items = [];
   const rx = /<details><summary>([\s\S]*?)<\/summary><div class="a">([\s\S]*?)<\/div><\/details>/g;
@@ -94,7 +99,7 @@ for (const r of routes) {
   let bodyMain = '<section class="page" data-route="' + r + '" data-title="' + sec.title + '">' + sec.body + '</section>\n';
   if (WITH_CONFIRMATION.includes(r)) bodyMain += '<section class="page" data-route="confirmation" data-title="Demande enregistrée" hidden>' + sections.confirmation.body + '</section>\n';
   if (r === 'donner' || r === 'vendre') bodyMain += template + '\n';
-  const schemas = jsonld(LOCAL_BUSINESS) + (r === 'faq' ? jsonld(faqSchema(sec.body)) : '');
+  const schemas = jsonld(LOCAL_BUSINESS) + (r === 'faq' ? jsonld(faqSchema(sec.body)) : '') + (GUIDES[r] ? jsonld(articleSchema(r, sec.title, meta.desc)) : '');
   const doc = '<!doctype html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n'
     + '<title>' + esc(title) + '</title>\n'
     + (GOOGLE_SITE_VERIFICATION ? '<meta name="google-site-verification" content="' + esc(GOOGLE_SITE_VERIFICATION) + '">\n' : '')
